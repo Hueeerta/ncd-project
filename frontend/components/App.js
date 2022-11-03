@@ -1,7 +1,20 @@
 import "regenerator-runtime/runtime";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-const App = ({ isSignedIn, wallet }) => {
+const App = ({ isSignedIn, wallet, buskerManager }) => {
+  const [contractMessage, setContractMessage] = useState("loading...");
+
+  useEffect(() => {
+    buskerManager.getBuskers()
+      .then((response) => {
+        console.log(response);
+        setContractMessage(response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
+
   if (!isSignedIn) {
     return (
       <>
@@ -19,10 +32,11 @@ const App = ({ isSignedIn, wallet }) => {
 
   return (
     <>
-      <p>Bienvenido</p>
+      <p>Welcome</p>
       <button type="button" onClick={() => wallet.signOut()}>
         Log out {wallet.accountId}
       </button>
+      <p>Message: {contractMessage}</p>
     </>
   );
 };
