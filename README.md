@@ -8,15 +8,51 @@
 
 ## MVP
 
-Para el entregable de este viernes, y considerando que Rust es un desafío totalmente nuevo para mí, estoy pensando llegar con un contrato simple que pueda:
+Este proyecto de desarrollado diseñado, desarrollado, probado y desplegado en la Testnet del Protocolo de NEWAR para el **_NEAR Certified Developer 31/11/22_**, es un contrato simple que puede:
 
-1. Crear y sumar nuevos perfiles de artistas callejeros a una lista.
-2. Obtener una lista de todos los artistas callejeros registrados.
-3. Donar a uno de los artistas callejeros de la lista.
+1. Crear y sumar nuevos perfiles de artistas callejeros a una collección.
+2. Obtener una lista de todos los perfiles de artistas callejeros registrados.
+3. Donar a uno de los artistas callejeros de la lista a elección.
 
 ## Diagram
 
-![](https://i.imgur.com/nwWRZ9D.png)
+![](https://i.imgur.com/CJKx4K2.png)
+
+# Smart Contract
+
+Esta plataforma cuenta con un modelo de contrato administrador que gestiona una colección de perfiles de artistas registrados en la blockchain.
+
+## NEAR AccountId
+
+El contrato ya se encuentra desplegado en la cuenta [buskerdapp2.hueeerta.testnet](https://stats.gallery/testnet/buskerdapp2.hueeerta.testnet/contract?t=all). Y con la [NEAR CLI](https://docs.near.org/tools/near-cli) ya puedes interactuar con el.
+
+Para obtener la lista de perfiles de artistas registrados, puedes llamar al metodo get_buskers()
+
+```
+near view buskerdapp2.hueeerta.testnet get_buskers --accountId tu.cuenta.testnet
+```
+
+Para sumar tu perfil a la lista de perfiles de artistas, puedes llamar al metodo set_busker()
+
+```
+near call buskerdapp2.hueeerta.testnet set_busker '{"account_id":"tu.cuenta.testnet","name":"Nombre Artístico","category": "Malabarismo","location": "-34.584525,-58.404998","img":"https://ovallehoy.cl/wp-content/uploads/2017/01/Raul-malabarista.jpg","qr":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1920px-QR_code_for_mobile_English_Wikipedia.svg.png"}' --accountId hueeerta.testnet
+```
+
+## Initialization
+
+Para inicializar el contrato, primero debes de compilar el archivo de Rust a WebAssembly:
+
+```
+./build.sh
+```
+
+Luego debes desplegar el contrato generado en una cuenta en Testnet:
+
+```
+near deploy --accountId deploy.account.testnet --wasmFile target/wasm32-unknown-unknown/release/ncd_busker_project.wasm
+```
+
+Finalmente ya puedes interactuar con el contrato desde el NEAR CLI o dando `npm start` para interactuar desde el frontend.
 
 # NEAR dApp
 
