@@ -1,5 +1,6 @@
 import "regenerator-runtime/runtime";
 import React, { useState, useEffect } from "react";
+import { utils } from "near-api-js";
 
 const App = ({ isSignedIn, wallet, buskerManager }) => {
   const [buskerList, setBuskerList] = useState([]);
@@ -10,6 +11,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
     location: "",
     img: "",
     qr: "",
+    donations: 0,
   });
   const [newBusker, setNewBusker] = useState({
     name: "",
@@ -19,11 +21,16 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
     qr: "",
   });
 
+  const yoctoToNEAR = (amount) =>
+    utils.format.formatNearAmount(
+      amount.toLocaleString("fullwide", { useGrouping: false })
+    );
+
   const getBusker = () => {
     buskerManager
       .getBusker(wallet.accountId)
       .then((response) => {
-        // console.log("My profile:", response);
+        console.log("My profile:", response);
         // debugger;
         if (response) {
           setHaveProfile(response);
@@ -92,11 +99,9 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
     } else if (event.target.id === "category") {
       buskerInput.category = event.target.value;
     } else if (event.target.id === "location") {
-      buskerInput.location = event.target.value;
+      buskerInput.location = event.target.value.replace(/\s/g, "");
     } else if (event.target.id === "img") {
       buskerInput.img = event.target.value;
-    } else if (event.target.id === "qr") {
-      buskerInput.qr = event.target.value;
     }
     setNewBusker(buskerInput);
   };
@@ -121,8 +126,22 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
           location: "",
           img: "",
           qr: "",
+          donations: 0,
         });
         getBuskersList();
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  const handleDonation = (account_id) => {
+    const amount = document.getElementById("amount").value;
+    console.log("Dona", amount);
+    buskerManager
+      .donateToBusker(account_id, amount)
+      .then((response) => {
+        console.log(response);
       })
       .catch((error) => {
         console.error(error);
@@ -167,6 +186,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
                 value={newBusker.name}
                 placeholder="Busker Name"
                 onChange={handleInputChange}
+                required
               />
             </label>
             <br />
@@ -179,6 +199,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
                 value={newBusker.category}
                 placeholder="Juggling"
                 onChange={handleInputChange}
+                required
               />
             </label>
             <br />
@@ -203,20 +224,10 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
                 value={newBusker.img}
                 placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/One-man_band_street_performer_-_5.jpg/1280px-One-man_band_street_performer_-_5.jpg"
                 onChange={handleInputChange}
+                required
               />
             </label>
             <br />
-            <label htmlFor="qr">
-              The QR code:
-              <input
-                id="qr"
-                name="qr"
-                type="text"
-                value={newBusker.qr}
-                placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1920px-QR_code_for_mobile_English_Wikipedia.svg.png"
-                onChange={handleInputChange}
-              />
-            </label>
             <br />
             <button type="submit" onClick={handleNewBusker}>
               Create my Busker profile
@@ -232,7 +243,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
                 <th>CATEGORY</th>
                 <th>LOCATION</th>
                 <th>IMG</th>
-                <th>QR</th>
+                <th>DONATE</th>
               </tr>
             </thead>
             <tbody>
@@ -245,22 +256,28 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
                     <a
                       href={
                         "http://maps.google.com/maps?z=19&t=m&q=loc:" +
-                        busker.location.replace(/\s/g, "")
+                        busker.location
                       }
                       target="_blank"
                     >
-                      {busker.location.replace(/\s/g, "")}
+                      {busker.location}
                     </a>
                   </td>
                   <td>
                     <img src={busker.img} alt={busker.name} width="100" />
                   </td>
                   <td>
-                    <img
-                      src={busker.qr}
-                      alt={busker.name + "QR for donations"}
-                      width="100"
-                    />
+                    <input className="donation" id="amount" name="amount" />{" "}
+                    NEAR
+                    <br />
+                    <button
+                      onClick={(event) => {
+                        event.target.innerText = "Loading...";
+                        handleDonation(busker.account_id);
+                      }}
+                    >
+                      Donate
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -271,6 +288,11 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
         <>
           <p>Welcome {haveProfile.name}</p>
           <img src={haveProfile.img} alt={haveProfile.name} width="200" />
+          <br />
+          <p>
+            <strong>Donations:</strong> {yoctoToNEAR(haveProfile.donations)}{" "}
+            NEAR
+          </p>
           <br />
           <button onClick={PrintImage}>Print your QR</button>
           <br />

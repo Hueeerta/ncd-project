@@ -1,3 +1,5 @@
+import { utils } from "near-api-js";
+
 export class BuskerManager {
   constructor({ contractId, userWallet }) {
     this.contractId = contractId;
@@ -13,7 +15,7 @@ export class BuskerManager {
         category: cat,
         location: loc,
         img: img,
-        qr: qr,
+        qr: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1920px-QR_code_for_mobile_English_Wikipedia.svg.png",
       },
     });
   }
@@ -42,6 +44,16 @@ export class BuskerManager {
     return await this.wallet.viewMethod({
       contractId: this.contractId,
       method: "get_buskers",
+    });
+  }
+
+  async donateToBusker(accountId, amount) {
+    const amountInYocto = utils.format.parseNearAmount(amount);
+    return await this.wallet.callMethod({
+      contractId: this.contractId,
+      method: "donate_to_busker",
+      args: { beneficiary: accountId },
+      deposit: amountInYocto,
     });
   }
 }

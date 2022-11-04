@@ -1,7 +1,8 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::UnorderedMap;
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env,near_bindgen};
+use near_sdk::{env,near_bindgen,AccountId,Balance,Promise};
+use near_sdk::json_types::U128;
 
 // Definition of the Busker Object with serde for JSON serialization on NEAR CLI and frontend 
 #[derive(Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -12,7 +13,8 @@ pub struct Busker {
     pub category: String,
     pub location: String,
     pub img: String,
-    pub qr: String
+    pub qr: String,
+    pub donations: u128,
 }
 
 // Implement trait Default for initialize the Busker's structure 
@@ -24,7 +26,8 @@ impl Default for Busker {
             category: String::from(""),
             location: String::from(""),
             img: String::from(""),
-            qr: String::from("")
+            qr: String::from(""),
+            donations: 0,
         }
     }
 }
@@ -38,7 +41,8 @@ impl Busker {
             category,
             location,
             img,
-            qr
+            qr,
+            donations: 0,
         }
     }
 }
@@ -71,7 +75,7 @@ impl BuskerManager {
             String::from(&category),
             String::from(&location),
             String::from(&img),
-            String::from(&qr)
+            String::from(&qr),
         );
 
         // Check if the profile already exist
@@ -131,5 +135,32 @@ impl BuskerManager {
     // Read method that returns a vector with the collection of Buskers
     pub fn get_buskers(&self) -> Vec<Busker> {
         self.buskers_list.values_as_vector().to_vec()
+    }
+
+    #[payable]
+    // Public method for donation to a Busker
+    pub fn donate_to_busker(&mut self, beneficiary: AccountId) -> U128 {
+        // Get who is calling the method and how much $NEAR they attached
+        let donation_amount: Balance = env::attached_deposit();
+
+        assert!(
+            env::attached_deposit() > 0,
+            "WARNING: Attach at least 1 NEAR for the donation."
+        );
+
+        // Find the Busker beneficiary
+        match self.buskers_list.get(&beneficiary.to_string()) {
+            // Check if the Busker exist
+            Some(mut busker) => {
+                // If exist, we save the donation in to the Busker profile
+                busker.donations += donation_amount;
+                self.buskers_list.insert(&beneficiary.to_string(), &busker);
+
+                // Deposit the donation
+                Promise::new(beneficiary).transfer(env::attached_deposit());
+                U128(donation_amount)
+            }
+            None => U128(0),
+        }
     }
 }
