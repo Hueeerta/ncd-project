@@ -3,36 +3,73 @@ import React, { useState, useEffect } from "react";
 
 const App = ({ isSignedIn, wallet, buskerManager }) => {
   const [buskerList, setBuskerList] = useState([]);
-  const [newBusker, setNewBusker] = useState({ name: "" });
+  const [haveProfile, setHaveProfile] = useState({
+    account_id: "",
+    name: "",
+    category: "",
+    location: "",
+    img: "",
+    qr: "",
+  });
+  const [newBusker, setNewBusker] = useState({
+    name: "",
+    category: "",
+    location: "",
+    img: "",
+    qr: "",
+  });
+
+  const getBusker = () => {
+    buskerManager
+      .getBusker(wallet.accountId)
+      .then((response) => {
+        // console.log("My profile:", response);
+        // debugger;
+        if (response) {
+          setHaveProfile(response);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
   const getBuskersList = () => {
     buskerManager
       .getBuskers()
       .then((response) => {
-        console.log(response);
+        // console.log("Busker List:", response);
         setBuskerList(response);
       })
       .catch((error) => {
         console.error(error);
       });
-  }
+  };
 
-  const createNewBusker = (name) => {
+  const createNewBusker = ({ name, category, location, img, qr }) => {
     buskerManager
-      .setBusker(name)
+      .setBusker(name, category, location, img, qr)
       .then((response) => {
-        console.log(response);
+        alert(response.receipts_outcome[0].outcome.logs[0]);
+        // debugger;
+        getBusker();
         getBuskersList();
       })
       .catch((error) => {
         console.error(error);
       });
-  }
+  };
 
   useEffect(() => {
-    getBuskersList();
+    if (isSignedIn) {
+      getBusker();
+      if (haveProfile.name === "") {
+        getBuskersList();
+      }
+    }
   }, []);
 
+  // If the user haven't signed in with the NEAR Wallet
   if (!isSignedIn) {
     return (
       <>
@@ -52,6 +89,14 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
     const buskerInput = { ...newBusker };
     if (event.target.id === "name") {
       buskerInput.name = event.target.value;
+    } else if (event.target.id === "category") {
+      buskerInput.category = event.target.value;
+    } else if (event.target.id === "location") {
+      buskerInput.location = event.target.value;
+    } else if (event.target.id === "img") {
+      buskerInput.img = event.target.value;
+    } else if (event.target.id === "qr") {
+      buskerInput.qr = event.target.value;
     }
     setNewBusker(buskerInput);
   };
@@ -59,53 +104,179 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
   const handleNewBusker = (event) => {
     event.preventDefault();
     console.log("Calling set_busker() on chain:", newBusker);
-    createNewBusker(newBusker.name); 
+    event.target.innerText = "Creating...";
+    createNewBusker(newBusker);
   };
 
+  const handleDeleteBusker = (event) => {
+    event.target.innerText = "Deleting...";
+    buskerManager
+      .deleteBusker(wallet.accountId)
+      .then((response) => {
+        alert(response.receipts_outcome[0].outcome.logs[0]);
+        setHaveProfile({
+          account_id: "",
+          name: "",
+          category: "",
+          location: "",
+          img: "",
+          qr: "",
+        });
+        getBuskersList();
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  const PrintImage = () => {
+    const pwa = window.open("about:blank", "_new");
+    pwa.document.open();
+    pwa.document.write(
+      "<html><head><scri" +
+        "pt>function step1(){\n" +
+        "setTimeout('step2()', 10);}\n" +
+        "function step2(){window.print();window.close()}\n" +
+        "</scri" +
+        "pt></head><body onload='step1()'>\n" +
+        "<img src='" +
+        haveProfile.qr +
+        "' width='100%' /></body></html>"
+    );
+    pwa.document.close();
+  };
+
+  // If the user is logged in
   return (
     <>
       <h1>Busker Donation Plataform</h1>
-      <p>Welcome</p>
       <button type="button" onClick={() => wallet.signOut()}>
         Log out {wallet.accountId}
       </button>
       <hr />
-      <form>
-        <h3>Create your Busker Profile here:</h3>
-        <label htmlFor="name">
-          Busker Name:
-          <input
-            id="name"
-            name="name"
-            type="text"
-            value={newBusker.name}
-            onChange={handleInputChange}
-          />
-        </label>
-        <button type="submit" onClick={handleNewBusker}>
-          Create my Busker profile
-        </button>
-      </form>
-      <hr />
-      <h3>Search for a Buskert to donate to:</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>ACCOUNT</th>
-            <th>NAME</th>
-          </tr>
-        </thead>
-        <tbody>
-          {buskerList.map((busker) => (
-            <tr key={busker.id}>
-              <td>{busker.id}</td>
-              <td>{busker.account_id}</td>
-              <td>{busker.name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {haveProfile.name === "" ? (
+        <>
+          <h3>Wanna create your own Profile?</h3>
+          <form>
+            <label htmlFor="name">
+              Your stage name:
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={newBusker.name}
+                placeholder="Busker Name"
+                onChange={handleInputChange}
+              />
+            </label>
+            <br />
+            <label htmlFor="category">
+              Category of your performance:
+              <input
+                id="category"
+                name="category"
+                type="text"
+                value={newBusker.category}
+                placeholder="Juggling"
+                onChange={handleInputChange}
+              />
+            </label>
+            <br />
+            <label htmlFor="location">
+              Place where you can be found on a regular basis:
+              <input
+                id="location"
+                name="location"
+                type="text"
+                value={newBusker.location}
+                placeholder="-33.425572,-70.614705"
+                onChange={handleInputChange}
+              />
+            </label>
+            <br />
+            <label htmlFor="img">
+              An image of you and/or your performance:
+              <input
+                id="img"
+                name="img"
+                type="text"
+                value={newBusker.img}
+                placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/One-man_band_street_performer_-_5.jpg/1280px-One-man_band_street_performer_-_5.jpg"
+                onChange={handleInputChange}
+              />
+            </label>
+            <br />
+            <label htmlFor="qr">
+              The QR code:
+              <input
+                id="qr"
+                name="qr"
+                type="text"
+                value={newBusker.qr}
+                placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1920px-QR_code_for_mobile_English_Wikipedia.svg.png"
+                onChange={handleInputChange}
+              />
+            </label>
+            <br />
+            <button type="submit" onClick={handleNewBusker}>
+              Create my Busker profile
+            </button>
+          </form>
+          <hr />
+          <h3>Looking for a Busker to donate to?</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ACCOUNT</th>
+                <th>NAME</th>
+                <th>CATEGORY</th>
+                <th>LOCATION</th>
+                <th>IMG</th>
+                <th>QR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {buskerList.map((busker, key) => (
+                <tr key={key + busker.account_id}>
+                  <td>{busker.account_id}</td>
+                  <td>{busker.name}</td>
+                  <td>{busker.category}</td>
+                  <td>
+                    <a
+                      href={
+                        "http://maps.google.com/maps?z=19&t=m&q=loc:" +
+                        busker.location.replace(/\s/g, "")
+                      }
+                      target="_blank"
+                    >
+                      {busker.location.replace(/\s/g, "")}
+                    </a>
+                  </td>
+                  <td>
+                    <img src={busker.img} alt={busker.name} width="100" />
+                  </td>
+                  <td>
+                    <img
+                      src={busker.qr}
+                      alt={busker.name + "QR for donations"}
+                      width="100"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      ) : (
+        <>
+          <p>Welcome {haveProfile.name}</p>
+          <img src={haveProfile.img} alt={haveProfile.name} width="200" />
+          <br />
+          <button onClick={PrintImage}>Print your QR</button>
+          <br />
+          <button onClick={handleDeleteBusker}>Delete my profile</button>
+        </>
+      )}
     </>
   );
 };
