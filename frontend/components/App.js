@@ -1,10 +1,12 @@
 import "regenerator-runtime/runtime";
 import React, { useState, useEffect } from "react";
 import { utils } from "near-api-js";
+import ProfileList from "./ProfileList";
+import SelectedProfile from "./SelectedProfile";
 
 const App = ({ isSignedIn, wallet, buskerManager }) => {
   const [buskerList, setBuskerList] = useState([]);
-  const [haveProfile, setHaveProfile] = useState({
+  const [hasProfile, setHasProfile] = useState({
     account_id: "",
     name: "",
     category: "",
@@ -20,6 +22,15 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
     img: "",
     qr: "",
   });
+  const [profileSelection, setProfileSelection] = useState({
+    account_id: "",
+    name: "",
+    category: "",
+    location: "",
+    img: "",
+    qr: "",
+    donations: 0,
+  });
 
   const yoctoToNEAR = (amount) =>
     utils.format.formatNearAmount(
@@ -33,7 +44,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
         console.log("My profile:", response);
         // debugger;
         if (response) {
-          setHaveProfile(response);
+          setHasProfile(response);
         }
       })
       .catch((error) => {
@@ -70,7 +81,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
   useEffect(() => {
     if (isSignedIn) {
       getBusker();
-      if (haveProfile.name === "") {
+      if (hasProfile.name === "") {
         getBuskersList();
       }
     }
@@ -119,7 +130,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
       .deleteBusker(wallet.accountId)
       .then((response) => {
         alert(response.receipts_outcome[0].outcome.logs[0]);
-        setHaveProfile({
+        setHasProfile({
           account_id: "",
           name: "",
           category: "",
@@ -129,19 +140,6 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
           donations: 0,
         });
         getBuskersList();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-
-  const handleDonation = (account_id) => {
-    const amount = document.getElementById("amount").value;
-    console.log("Dona", amount);
-    buskerManager
-      .donateToBusker(account_id, amount)
-      .then((response) => {
-        console.log(response);
       })
       .catch((error) => {
         console.error(error);
@@ -159,7 +157,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
         "</scri" +
         "pt></head><body onload='step1()'>\n" +
         "<img src='" +
-        haveProfile.qr +
+        hasProfile.qr +
         "' width='100%' /></body></html>"
     );
     pwa.document.close();
@@ -168,74 +166,93 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
   // If the user is logged in
   return (
     <>
+    <div className="container p-4">
       <h1>Busker Donation Plataform</h1>
       <button type="button" onClick={() => wallet.signOut()}>
         Log out {wallet.accountId}
       </button>
+      </div>
       <hr />
-      {haveProfile.name === "" ? (
+      {hasProfile.name === "" ? ( // If user don't have a profile
         <>
-          <h3>Wanna create your own Profile?</h3>
-          <form>
-            <label htmlFor="name">
-              Your stage name:
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={newBusker.name}
-                placeholder="Busker Name"
-                onChange={handleInputChange}
-                required
-              />
-            </label>
-            <br />
-            <label htmlFor="category">
-              Category of your performance:
-              <input
-                id="category"
-                name="category"
-                type="text"
-                value={newBusker.category}
-                placeholder="Juggling"
-                onChange={handleInputChange}
-                required
-              />
-            </label>
-            <br />
-            <label htmlFor="location">
-              Place where you can be found on a regular basis:
-              <input
-                id="location"
-                name="location"
-                type="text"
-                value={newBusker.location}
-                placeholder="-33.425572,-70.614705"
-                onChange={handleInputChange}
-              />
-            </label>
-            <br />
-            <label htmlFor="img">
-              An image of you and/or your performance:
-              <input
-                id="img"
-                name="img"
-                type="text"
-                value={newBusker.img}
-                placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/One-man_band_street_performer_-_5.jpg/1280px-One-man_band_street_performer_-_5.jpg"
-                onChange={handleInputChange}
-                required
-              />
-            </label>
-            <br />
-            <br />
-            <button type="submit" onClick={handleNewBusker}>
-              Create my Busker profile
-            </button>
-          </form>
-          <hr />
-          <h3>Looking for a Busker to donate to?</h3>
-          <table>
+          <div className="container p-4">
+            <h3>Wanna create your own Profile?</h3>
+            <form>
+              <label htmlFor="name">
+                Your stage name:
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={newBusker.name}
+                  placeholder="Busker Name"
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <br />
+              <label htmlFor="category">
+                Category of your performance:
+                <input
+                  id="category"
+                  name="category"
+                  type="text"
+                  value={newBusker.category}
+                  placeholder="Juggling"
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <br />
+              <label htmlFor="location">
+                Place where you can be found on a regular basis:
+                <input
+                  id="location"
+                  name="location"
+                  type="text"
+                  value={newBusker.location}
+                  placeholder="-33.425572,-70.614705"
+                  onChange={handleInputChange}
+                />
+              </label>
+              <br />
+              <label htmlFor="img">
+                An image of you and/or your performance:
+                <input
+                  id="img"
+                  name="img"
+                  type="text"
+                  value={newBusker.img}
+                  placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/One-man_band_street_performer_-_5.jpg/1280px-One-man_band_street_performer_-_5.jpg"
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <br />
+              <br />
+              <button type="submit" onClick={handleNewBusker}>
+                Create my Busker profile
+              </button>
+            </form>
+          </div>
+            <hr />
+
+            <div className="container p-4">
+              <div className="row">
+                <h3>Looking for a Busker to donate to?</h3>
+                <div className="col-md-7">
+                  <ProfileList buskerList={buskerList} />
+                </div>
+                <div className="col-md-5">
+                  <SelectedProfile
+                    profileSelection={profileSelection}
+                    buskerManager={buskerManager}
+                  />
+                </div>
+              </div>
+            </div>
+
+          {/* <table>
             <thead>
               <tr>
                 <th>ACCOUNT</th>
@@ -282,16 +299,16 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table> */}
         </>
       ) : (
+        // If user has a profile
         <>
-          <p>Welcome {haveProfile.name}</p>
-          <img src={haveProfile.img} alt={haveProfile.name} width="200" />
+          <p>Welcome {hasProfile.name}</p>
+          <img src={hasProfile.img} alt={hasProfile.name} width="200" />
           <br />
           <p>
-            <strong>Donations:</strong> {yoctoToNEAR(haveProfile.donations)}{" "}
-            NEAR
+            <strong>Donations:</strong> {yoctoToNEAR(hasProfile.donations)} NEAR
           </p>
           <br />
           <button onClick={PrintImage}>Print your QR</button>

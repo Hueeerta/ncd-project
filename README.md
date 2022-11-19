@@ -8,7 +8,7 @@
 
 ## MVP
 
-Este proyecto de desarrollado diseñado, desarrollado, probado y desplegado en la Testnet del Protocolo de NEWAR para el **_NEAR Certified Developer 31/11/22_**, es un contrato simple que puede:
+Este proyecto de desarrollado diseñado, desarrollado, probado y desplegado en la Testnet del Protocolo de NEWAR para el **_NEAR Certified Developer 31.10.2022_**, es un contrato simple que puede:
 
 1. Crear y sumar nuevos perfiles de artistas callejeros a una collección.
 2. Obtener una lista de todos los perfiles de artistas callejeros registrados.

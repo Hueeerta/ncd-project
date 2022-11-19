@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./components/App";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { Wallet } from "./lib/near-wallet";
 import { BuskerManager } from "./lib/busker-manager";
 
