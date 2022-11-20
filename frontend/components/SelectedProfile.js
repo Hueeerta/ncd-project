@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import ProfileSelectionContext from "../context/ProfileSelectionContext";
 
-export default function SelectedProfile({ profileSelection, buskerManager }) {
+export default function SelectedProfile({ buskerManager }) {
   const [donationAmount, setDonationAmount] = useState(0);
+  const { profileSelection, setProfileSelection } = useContext(
+    ProfileSelectionContext
+  );
 
   const handleDonation = (account_id) => {
     console.log("Dona", donationAmount);
@@ -17,8 +21,8 @@ export default function SelectedProfile({ profileSelection, buskerManager }) {
 
   return (
     <>
-      <div id="single-profile">
-        <div id="single-profile-content">
+      <div id="single-profile" className="border rounded p-4">
+        <div id="single-profile-content" className="">
           <img
             src={profileSelection.img}
             alt={profileSelection.name}

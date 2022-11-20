@@ -22,15 +22,6 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
     img: "",
     qr: "",
   });
-  const [profileSelection, setProfileSelection] = useState({
-    account_id: "",
-    name: "",
-    category: "",
-    location: "",
-    img: "",
-    qr: "",
-    donations: 0,
-  });
 
   const yoctoToNEAR = (amount) =>
     utils.format.formatNearAmount(
@@ -90,7 +81,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
   // If the user haven't signed in with the NEAR Wallet
   if (!isSignedIn) {
     return (
-      <>
+      <div className="container p-4">
         <h1>Busker Donation Plataform</h1>
         <p>Here you can find Buskers to donate money to.</p>
         <p>
@@ -99,7 +90,7 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
         <button type="button" onClick={() => wallet.signIn()}>
           Log in
         </button>
-      </>
+      </div>
     );
   }
 
@@ -166,11 +157,11 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
   // If the user is logged in
   return (
     <>
-    <div className="container p-4">
-      <h1>Busker Donation Plataform</h1>
-      <button type="button" onClick={() => wallet.signOut()}>
-        Log out {wallet.accountId}
-      </button>
+      <div className="container p-4">
+        <h1>Busker Donation Plataform</h1>
+        <button type="button" onClick={() => wallet.signOut()}>
+          Log out {wallet.accountId}
+        </button>
       </div>
       <hr />
       {hasProfile.name === "" ? ( // If user don't have a profile
@@ -235,86 +226,36 @@ const App = ({ isSignedIn, wallet, buskerManager }) => {
               </button>
             </form>
           </div>
-            <hr />
+          <hr />
 
-            <div className="container p-4">
-              <div className="row">
-                <h3>Looking for a Busker to donate to?</h3>
-                <div className="col-md-7">
-                  <ProfileList buskerList={buskerList} />
-                </div>
-                <div className="col-md-5">
-                  <SelectedProfile
-                    profileSelection={profileSelection}
-                    buskerManager={buskerManager}
-                  />
-                </div>
+          <div className="container p-4">
+            <div className="row">
+              <h3>Looking for a Busker to donate to?</h3>
+              <div className="col-md-7">
+                <ProfileList buskerList={buskerList} />
+              </div>
+              <div className="col-md-5">
+                <SelectedProfile
+                  buskerManager={buskerManager}
+                />
               </div>
             </div>
-
-          {/* <table>
-            <thead>
-              <tr>
-                <th>ACCOUNT</th>
-                <th>NAME</th>
-                <th>CATEGORY</th>
-                <th>LOCATION</th>
-                <th>IMG</th>
-                <th>DONATE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {buskerList.map((busker, key) => (
-                <tr key={key + busker.account_id}>
-                  <td>{busker.account_id}</td>
-                  <td>{busker.name}</td>
-                  <td>{busker.category}</td>
-                  <td>
-                    <a
-                      href={
-                        "http://maps.google.com/maps?z=19&t=m&q=loc:" +
-                        busker.location
-                      }
-                      target="_blank"
-                    >
-                      {busker.location}
-                    </a>
-                  </td>
-                  <td>
-                    <img src={busker.img} alt={busker.name} width="100" />
-                  </td>
-                  <td>
-                    <input className="donation" id="amount" name="amount" />{" "}
-                    NEAR
-                    <br />
-                    <button
-                      onClick={(event) => {
-                        event.target.innerText = "Loading...";
-                        handleDonation(busker.account_id);
-                      }}
-                    >
-                      Donate
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table> */}
+          </div>
         </>
       ) : (
         // If user has a profile
-        <>
-          <p>Welcome {hasProfile.name}</p>
+        <div className="container p-4">
+          <h2>Welcome {hasProfile.name}</h2>
           <img src={hasProfile.img} alt={hasProfile.name} width="200" />
           <br />
           <p>
-            <strong>Donations:</strong> {yoctoToNEAR(hasProfile.donations)} NEAR
+            <strong>Total donation recieved:</strong> {yoctoToNEAR(hasProfile.donations)} NEAR
           </p>
           <br />
           <button onClick={PrintImage}>Print your QR</button>
           <br />
           <button onClick={handleDeleteBusker}>Delete my profile</button>
-        </>
+        </div>
       )}
     </>
   );
